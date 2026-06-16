@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — Smart Todo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ============ LOGIN PAGE ============ -->
+<div id="loginPage" class="auth-page d-flex align-items-center justify-content-center min-vh-100">
+  <div class="auth-card card shadow-sm p-4">
+    <div class="text-center mb-4">
+      <div class="brand-icon mb-2"><i class="fa-solid fa-check-double"></i></div>
+      <h4 class="fw-bold">TaskFlow</h4>
+      <p class="text-muted small">Your smart productivity companion</p>
+    </div>
+    <ul class="nav nav-pills auth-tabs mb-4 justify-content-center" id="authTabs">
+      <li class="nav-item"><a class="nav-link active" data-tab="login">Sign In</a></li>
+      <li class="nav-item"><a class="nav-link" data-tab="register">Sign Up</a></li>
+    </ul>
+
+    <!-- Sign In -->
+    <div id="loginForm">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Email</label>
+        <input type="email" id="loginEmail" class="form-control" placeholder="you@example.com"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Password</label>
+        <input type="password" id="loginPass" class="form-control" placeholder="••••••••"/>
+      </div>
+      <div id="loginError" class="text-danger small mb-2 d-none"></div>
+      <button class="btn btn-primary w-100" id="loginBtn">Sign In</button>
+    </div>
+
+    <!-- Sign Up -->
+    <div id="registerForm" class="d-none">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Full Name</label>
+        <input type="text" id="regName" class="form-control" placeholder="Your name"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Email</label>
+        <input type="email" id="regEmail" class="form-control" placeholder="you@example.com"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Password</label>
+        <input type="password" id="regPass" class="form-control" placeholder="Min 6 characters"/>
+      </div>
+      <div id="regError" class="text-danger small mb-2 d-none"></div>
+      <button class="btn btn-primary w-100" id="registerBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="appPage" class="d-none">
+
+  <!-- Navbar -->
+  <nav class="navbar sticky-top navbar-light bg-white border-bottom shadow-sm px-3">
+    <span class="navbar-brand fw-bold text-primary"><i class="fa-solid fa-check-double me-2"></i>TaskFlow</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="text-muted small" id="greetUser"></span>
+      <button class="btn btn-sm btn-outline-secondary" id="logoutBtn"><i class="fa fa-sign-out-alt"></i></button>
+    </div>
+  </nav>
+
+  <div class="container-fluid py-4 px-3 px-md-5">
+    <div class="row g-4">
+
+      <!-- Sidebar: Lists -->
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="fw-bold mb-0 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.08em;">My Lists</h6>
+              <button class="btn btn-sm btn-primary rounded-circle" id="addListBtn" title="New list"><i class="fa fa-plus fa-xs"></i></button>
+            </div>
+            <ul class="list-group list-group-flush" id="listSidebar"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel -->
+      <div class="col-md-9">
+
+        <!-- Toolbar -->
+        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+          <div class="input-group flex-grow-1" style="max-width:320px">
+            <span class="input-group-text bg-white"><i class="fa fa-search text-muted fa-sm"></i></span>
+            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Search tasks…"/>
+          </div>
+          <select id="filterStatus" class="form-select w-auto">
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="done">Done</option>
+          </select>
+          <select id="sortTasks" class="form-select w-auto">
+            <option value="created">Newest</option>
+            <option value="alpha">A–Z</option>
+            <option value="priority">Priority</option>
+          </select>
+          <button class="btn btn-outline-primary" id="aiBtn" title="AI Task Creator"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Create</button>
+          <button class="btn btn-primary" id="openAddTaskBtn"><i class="fa fa-plus me-1"></i>Add Task</button>
+        </div>
+
+        <!-- Active List Title -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <h5 class="fw-bold mb-0" id="activeListTitle">All Tasks</h5>
+          <span class="badge bg-light text-muted border" id="taskCount">0</span>
+        </div>
+
+        <!-- Task Board -->
+        <div id="taskBoard" class="task-board"></div>
+        <div id="emptyState" class="text-center py-5 d-none">
+          <i class="fa fa-clipboard-list text-muted" style="font-size:2.5rem"></i>
+          <p class="text-muted mt-2">No tasks yet. Add one above!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Add/Edit Task ============ -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="taskModalTitle">New Task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editTaskId"/>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Task Title <span class="text-danger">*</span></label>
+          <input type="text" id="taskTitle" class="form-control" placeholder="What needs to be done?"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Notes</label>
+          <textarea id="taskNotes" class="form-control" rows="2" placeholder="Add details…"></textarea>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col">
+            <label class="form-label small fw-semibold">Priority</label>
+            <select id="taskPriority" class="form-select">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="col">
+            <label class="form-label small fw-semibold">Due Date</label>
+            <input type="date" id="taskDue" class="form-control"/>
+          </div>
+          <div class="col">
+            <label class="form-label small fw-semibold">List</label>
+            <select id="taskList" class="form-select"></select>
+          </div>
+        </div>
+        <!-- Sub-tasks -->
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-semibold mb-0">Sub-tasks</label>
+            <button class="btn btn-sm btn-link p-0 text-primary" id="addSubBtn"><i class="fa fa-plus fa-xs me-1"></i>Add</button>
+          </div>
+          <div id="subTaskList" class="mb-1"></div>
+          <input type="text" id="subTaskInput" class="form-control form-control-sm d-none" placeholder="Sub-task title…"/>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="saveTaskBtn">Save Task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: AI Natural Language ============ -->
+<div class="modal fade" id="aiModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>AI Task Creator</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Describe your task in plain English. AI will break it down into subtasks.</p>
+        <textarea id="aiPrompt" class="form-control mb-2" rows="3" placeholder="e.g. Plan a birthday party for next Saturday…"></textarea>
+        <button class="btn btn-primary w-100 mb-3" id="aiGenerateBtn">
+          <span id="aiSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+          Generate Tasks
+        </button>
+        <div id="aiResult" class="d-none">
+          <div class="fw-semibold small mb-2 text-muted">PREVIEW</div>
+          <div id="aiPreviewList"></div>
+          <button class="btn btn-success w-100 mt-2" id="aiAddAllBtn">Add These Tasks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Task Detail / Note ============ -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="detailTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="detailMeta" class="d-flex flex-wrap gap-2 mb-3"></div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Notes</label>
+          <div id="detailNotes" class="p-2 rounded bg-light small text-muted" style="min-height:50px"></div>
+        </div>
+        <div id="detailSubSection" class="d-none">
+          <label class="form-label small fw-semibold">Sub-tasks</label>
+          <ul id="detailSubList" class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-sm btn-outline-primary" id="detailEditBtn"><i class="fa fa-edit me-1"></i>Edit</button>
+        <button class="btn btn-sm btn-outline-danger" id="detailDeleteBtn"><i class="fa fa-trash me-1"></i>Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: New List ============ -->
+<div class="modal fade" id="listModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">New List</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="listNameInput" class="form-control mb-2" placeholder="List name…"/>
+        <div class="d-flex gap-2 flex-wrap" id="listColorPicker"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-primary btn-sm w-100" id="saveListBtn">Create List</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
